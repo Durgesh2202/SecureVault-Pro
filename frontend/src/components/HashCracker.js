@@ -5,6 +5,7 @@ import {
 import axios from "axios";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import SecurityIcon from "@mui/icons-material/Security";
+import { getApiUrl, getAxiosConfig, API_CONFIG } from "../config";
 
 export default function HashCracker() {
   const [hash, setHash] = useState("");
@@ -19,10 +20,24 @@ export default function HashCracker() {
     setShow(false);
     setResult("");
     try {
-      const res = await axios.post("http://localhost:5000/api/crack", { hash, type, maxLength });
+      const res = await axios.post(
+        getApiUrl(API_CONFIG.ENDPOINTS.CRACK), 
+        { hash, type, maxLength },
+        getAxiosConfig()
+      );
       setResult(res.data.result);
-    } catch (e) {
-      setResult("Error connecting to server.");
+    } catch (err) {
+      let errorMessage = "Error analyzing hash.";
+      
+      if (err.code === 'ECONNABORTED') {
+        errorMessage = "Request timed out. Please try again.";
+      } else if (err.response) {
+        errorMessage = `Server error: ${err.response.status}`;
+      } else if (err.request) {
+        errorMessage = "Cannot connect to server. Please check your internet connection.";
+      }
+      
+      setResult(errorMessage);
     }
     setLoading(false);
     setTimeout(() => setShow(true), 150);

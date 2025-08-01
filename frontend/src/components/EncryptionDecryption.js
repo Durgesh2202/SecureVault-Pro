@@ -5,6 +5,7 @@ import {
 import LockIcon from "@mui/icons-material/Lock";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import axios from "axios";
+import { getApiUrl, getAxiosConfig, API_CONFIG } from "../config";
 
 export default function EncryptionDecryption() {
   const [inputText, setInputText] = useState("");
@@ -43,18 +44,32 @@ export default function EncryptionDecryption() {
         setOutputText(result);
       } else {
         // Server-side encryption/decryption
-        const response = await axios.post("http://localhost:5000/api/crypto", {
-          text: inputText,
-          key: key,
-          algorithm: algorithm,
-          operation: operation
-        });
+        const response = await axios.post(
+          getApiUrl(API_CONFIG.ENDPOINTS.CRYPTO), 
+          {
+            text: inputText,
+            key: key,
+            algorithm: algorithm,
+            operation: operation
+          },
+          getAxiosConfig()
+        );
         setOutputText(response.data.result);
       }
       
       setTimeout(() => setShow(true), 200);
     } catch (e) {
-      setError(`Error: ${e.response?.data?.error || e.message}`);
+      let errorMessage = `Error: ${e.response?.data?.error || e.message}`;
+      
+      if (e.code === 'ECONNABORTED') {
+        errorMessage = "Request timed out. Please try again.";
+      } else if (e.response) {
+        errorMessage = `Error: ${e.response.data?.error || `Server error ${e.response.status}`}`;
+      } else if (e.request) {
+        errorMessage = "Cannot connect to server. Please check your internet connection.";
+      }
+      
+      setError(errorMessage);
       setTimeout(() => setShow(true), 200);
     } finally {
       setLoading(false);
