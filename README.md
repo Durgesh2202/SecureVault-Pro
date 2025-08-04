@@ -1,3 +1,5 @@
+#INPROGRESS 
+
 # SecureVault Pro – Password Strength Web App
 
 A full-stack application for analyzing password strength, performing hash analysis, encoding/decoding, encryption/decryption, and providing security tips.
