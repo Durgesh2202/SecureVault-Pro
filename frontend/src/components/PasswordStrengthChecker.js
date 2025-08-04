@@ -7,6 +7,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import WarningIcon from "@mui/icons-material/Warning";
 import ErrorIcon from "@mui/icons-material/Error";
 import LockIcon from "@mui/icons-material/Lock";
+import { API_ENDPOINTS } from "../config";
 
 const COLORS = [
   "#f44336", // Very Weak
@@ -35,7 +36,7 @@ export default function PasswordStrengthChecker() {
   const checkStrength = async () => {
     setShow(false);
     if (!password) return;
-    const res = await axios.post("http://localhost:5000/api/strength", { password });
+    const res = await axios.post(API_ENDPOINTS.strength, { password });
     setStrength(res.data.strength);
     setScore(res.data.score);
     setTimeout(() => setShow(true), 200);
