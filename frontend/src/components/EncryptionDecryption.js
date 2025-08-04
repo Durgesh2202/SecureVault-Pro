@@ -5,6 +5,7 @@ import {
 import LockIcon from "@mui/icons-material/Lock";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import axios from "axios";
+import API_BASE_URL from "../config/api";
 
 export default function EncryptionDecryption() {
   const [inputText, setInputText] = useState("");
@@ -43,7 +44,7 @@ export default function EncryptionDecryption() {
         setOutputText(result);
       } else {
         // Server-side encryption/decryption
-        const response = await axios.post("http://localhost:5000/api/crypto", {
+        const response = await axios.post(`${API_BASE_URL}/api/crypto`, {
           text: inputText,
           key: key,
           algorithm: algorithm,

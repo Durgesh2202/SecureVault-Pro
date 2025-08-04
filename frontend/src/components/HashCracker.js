@@ -5,6 +5,7 @@ import {
 import axios from "axios";
 import VpnKeyIcon from "@mui/icons-material/VpnKey";
 import SecurityIcon from "@mui/icons-material/Security";
+import API_BASE_URL from "../config/api";
 
 export default function HashCracker() {
   const [hash, setHash] = useState("");
@@ -19,7 +20,7 @@ export default function HashCracker() {
     setShow(false);
     setResult("");
     try {
-      const res = await axios.post("http://localhost:5000/api/crack", { hash, type, maxLength });
+      const res = await axios.post(`${API_BASE_URL}/api/crack`, { hash, type, maxLength });
       setResult(res.data.result);
     } catch (e) {
       setResult("Error connecting to server.");
