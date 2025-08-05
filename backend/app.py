@@ -29,68 +29,92 @@ def score_password(password):
 
 @app.route('/api/strength', methods=['POST'])
 def strength():
-    data = request.get_json()
-    password = data.get('password', '')
-    score = score_password(password)
-    strength_labels = [
-        'Very Weak',
-        'Weak', 
-        'Fair',
-        'Good',
-        'Strong',
-        'Excellent'
-    ]
-    return jsonify({
-        'score': score,
-        'strength': strength_labels[score] if score < len(strength_labels) else strength_labels[-1]
-    })
+    try:
+        data = request.get_json()
+        password = data.get('password', '')
+        
+        # Input validation
+        if password is None:
+            return jsonify({'error': 'Password is required'}), 400
+        
+        score = score_password(password)
+        strength_labels = [
+            'Very Weak',
+            'Weak', 
+            'Fair',
+            'Good',
+            'Strong',
+            'Excellent'
+        ]
+        return jsonify({
+            'score': score,
+            'strength': strength_labels[score] if score < len(strength_labels) else strength_labels[-1]
+        })
+    except Exception as e:
+        return jsonify({'error': f'Error: {str(e)}'}), 500
 
 @app.route('/api/crack', methods=['POST'])
 def crack():
-    data = request.get_json()
-    hash_value = data.get('hash', '')
-    hash_type = data.get('type', 'md5')
-    max_length = int(data.get('maxLength', 4))
-    chars = string.ascii_lowercase + string.digits
-    found = None
+    try:
+        data = request.get_json()
+        hash_value = data.get('hash', '').strip().lower()
+        hash_type = data.get('type', 'md5')
+        max_length = int(data.get('maxLength', 4))
+        
+        # Input validation
+        if not hash_value:
+            return jsonify({'result': 'Error: Hash value is required.'}), 400
+        
+        if max_length < 1 or max_length > 8:
+            return jsonify({'result': 'Error: Max length must be between 1 and 8.'}), 400
+        
+        # Expanded character set to include uppercase, lowercase, digits, and common special characters
+        chars = string.ascii_lowercase + string.ascii_uppercase + string.digits + "!@#$%^&*()_+-=[]{}|;:,.<>?"
+        found = None
 
-    def check_hash(candidate):
-        candidate_bytes = candidate.encode()
-        if hash_type == 'md5':
-            return hashlib.md5(candidate_bytes).hexdigest() == hash_value
-        elif hash_type == 'sha1':
-            return hashlib.sha1(candidate_bytes).hexdigest() == hash_value
-        elif hash_type == 'sha224':
-            return hashlib.sha224(candidate_bytes).hexdigest() == hash_value
-        elif hash_type == 'sha256':
-            return hashlib.sha256(candidate_bytes).hexdigest() == hash_value
-        elif hash_type == 'sha384':
-            return hashlib.sha384(candidate_bytes).hexdigest() == hash_value
-        elif hash_type == 'sha512':
-            return hashlib.sha512(candidate_bytes).hexdigest() == hash_value
-        elif hash_type == 'sha3_224':
-            return hashlib.sha3_224(candidate_bytes).hexdigest() == hash_value
-        elif hash_type == 'sha3_256':
-            return hashlib.sha3_256(candidate_bytes).hexdigest() == hash_value
-        elif hash_type == 'sha3_384':
-            return hashlib.sha3_384(candidate_bytes).hexdigest() == hash_value
-        elif hash_type == 'sha3_512':
-            return hashlib.sha3_512(candidate_bytes).hexdigest() == hash_value
-        elif hash_type == 'blake2b':
-            return hashlib.blake2b(candidate_bytes).hexdigest() == hash_value
-        elif hash_type == 'blake2s':
-            return hashlib.blake2s(candidate_bytes).hexdigest() == hash_value
-        return False
+        def check_hash(candidate):
+            candidate_bytes = candidate.encode()
+            if hash_type == 'md5':
+                return hashlib.md5(candidate_bytes).hexdigest() == hash_value
+            elif hash_type == 'sha1':
+                return hashlib.sha1(candidate_bytes).hexdigest() == hash_value
+            elif hash_type == 'sha224':
+                return hashlib.sha224(candidate_bytes).hexdigest() == hash_value
+            elif hash_type == 'sha256':
+                return hashlib.sha256(candidate_bytes).hexdigest() == hash_value
+            elif hash_type == 'sha384':
+                return hashlib.sha384(candidate_bytes).hexdigest() == hash_value
+            elif hash_type == 'sha512':
+                return hashlib.sha512(candidate_bytes).hexdigest() == hash_value
+            elif hash_type == 'sha3_224':
+                return hashlib.sha3_224(candidate_bytes).hexdigest() == hash_value
+            elif hash_type == 'sha3_256':
+                return hashlib.sha3_256(candidate_bytes).hexdigest() == hash_value
+            elif hash_type == 'sha3_384':
+                return hashlib.sha3_384(candidate_bytes).hexdigest() == hash_value
+            elif hash_type == 'sha3_512':
+                return hashlib.sha3_512(candidate_bytes).hexdigest() == hash_value
+            elif hash_type == 'blake2b':
+                return hashlib.blake2b(candidate_bytes).hexdigest() == hash_value
+            elif hash_type == 'blake2s':
+                return hashlib.blake2s(candidate_bytes).hexdigest() == hash_value
+            return False
 
-    for length in range(1, max_length+1):
-        for attempt in itertools.product(chars, repeat=length):
-            attempt_str = ''.join(attempt)
-            if check_hash(attempt_str):
-                found = attempt_str
+        for length in range(1, max_length+1):
+            for attempt in itertools.product(chars, repeat=length):
+                attempt_str = ''.join(attempt)
+                if check_hash(attempt_str):
+                    found = attempt_str
+                    break
+            if found:
                 break
-        if found:
-            break
-    return jsonify({'result': found or 'Not found! Try higher max length or check your hash.'})
+        
+        return jsonify({'result': found or 'Not found! Try higher max length or check your hash.'})
+
+    except ValueError as e:
+        return jsonify({'result': f'Error: Invalid input - {str(e)}'}), 400
+    except Exception as e:
+        return jsonify({'result': f'Error: {str(e)}'}), 500
 
 def vigenere_cipher(text, key, encrypt=True):
     """Vigenère cipher implementation"""
